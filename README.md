@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Mutual Fund Ranking PPT
 
 A Streamlit app that accepts mutual fund scheme names, reads public data from
@@ -12,6 +11,12 @@ rank table for the selected category and plan type, then copies the visible rank
 cells for 1Y, 3Y, and 5Y. Example: `9/38`.
 
 ## Run locally
+
+```powershell
+.\.venv\Scripts\streamlit.exe run app.py
+```
+
+If you are setting up the app on a new computer:
 
 ```powershell
 python -m venv .venv
@@ -32,7 +37,8 @@ No API key is currently required.
 
 ## Operational notes
 
-- The template supports up to 21 schemes: seven rows on each of three slides.
+- The app supports up to 200 schemes per presentation.
+- The PowerPoint builder adds extra ranking slides automatically.
 - Always choose the same Regular/Direct plan type you are checking on
   AdvisorKhoj before export.
 - AdvisorKhoj can change its HTML or restrict automated access. The extraction
@@ -42,6 +48,3 @@ No API key is currently required.
   official API arrangement.
 - The output is research support, not investment advice. Verify all figures
   before sending the deck to a client or RM.
-=======
-# mf-ranking-ppt-app
->>>>>>> 80e2123873fd68a9fab1cff7a7c968d316936562

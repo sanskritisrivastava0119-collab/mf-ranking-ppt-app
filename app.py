@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from src.advisorkhoj import AdvisorKhojClient, AdvisorKhojError
-from src.ppt_generator import build_ranking_deck
+from src.ppt_generator import MAX_SCHEMES, build_ranking_deck
 
 
 st.set_page_config(page_title="Mutual Fund Ranking PPT", layout="wide")
@@ -15,6 +15,11 @@ st.title("Mutual Fund Ranking PPT")
 st.caption(
     "Enter mutual fund scheme names, verify the AdvisorKhoj matches, "
     "then download a PowerPoint in the RM ranking format."
+)
+st.caption(
+    "Tip: names ending with (G) or Growth are treated as Regular plans. "
+    "If AdvisorKhoj search misses a scheme, the app tries Moneycontrol to resolve the scheme/category, "
+    "then still ranks it against AdvisorKhoj category data."
 )
 
 scheme_text = st.text_area(
@@ -25,7 +30,7 @@ scheme_text = st.text_area(
         "SBI Large Cap Fund Growth\n"
         "Motilal Oswal Midcap Fund Direct Growth"
     ),
-    help="Enter one scheme per line. Maximum 21 schemes per presentation.",
+    help=f"Enter one scheme per line. Maximum {MAX_SCHEMES} schemes per presentation.",
 )
 
 schemes = [line.strip() for line in scheme_text.splitlines() if line.strip()]
@@ -39,9 +44,14 @@ plan_type = st.selectbox(
     ),
 )
 
+current_input_signature = (tuple(schemes), plan_type)
+if st.session_state.get("ranking_input_signature") != current_input_signature:
+    st.session_state.pop("ranking_rows", None)
+    st.session_state.pop("ranking_fetch_summary", None)
+
 if st.button("Fetch rankings", type="primary", disabled=not schemes):
-    if len(schemes) > 21:
-        st.error("The supplied template supports a maximum of 21 schemes.")
+    if len(schemes) > MAX_SCHEMES:
+        st.error(f"The supplied template supports a maximum of {MAX_SCHEMES} schemes.")
     else:
         client = AdvisorKhojClient()
         rows = []
@@ -69,9 +79,17 @@ if st.button("Fetch rankings", type="primary", disabled=not schemes):
             )
 
         st.session_state["ranking_rows"] = rows
+        st.session_state["ranking_input_signature"] = current_input_signature
+        failed_count = sum(1 for row in rows if row["Status"] != "OK")
+        st.session_state["ranking_fetch_summary"] = (
+            f"Fetched {len(rows) - failed_count} of {len(rows)} ranking row(s)."
+        )
         progress.empty()
 
 if "ranking_rows" in st.session_state:
+    if st.session_state.get("ranking_fetch_summary"):
+        st.success(st.session_state["ranking_fetch_summary"])
+
     st.subheader("Review before export")
     st.info(
         "Edit any matched scheme, category, or ranking below. "
